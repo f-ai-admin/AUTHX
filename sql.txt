@@ -1,0 +1,60 @@
+-- Users table to store basic information
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    address TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Documents table to store document information
+CREATE TABLE documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    document_type VARCHAR(50) NOT NULL, -- aadhar, pan, voter_id, driving_license, passport
+    document_number VARCHAR(100) NOT NULL,
+    extracted_document_number VARCHAR(100),
+    extracted_date_of_birth DATE,
+    document_image_url TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Verification table to store all verification statuses
+CREATE TABLE verifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    
+    -- Document verification
+    document_originality_verified BOOLEAN DEFAULT FALSE,
+    document_number_match BOOLEAN DEFAULT FALSE,
+    age_verified BOOLEAN DEFAULT FALSE,
+    dob_match BOOLEAN DEFAULT FALSE,
+    
+    -- Face verification
+    selfie_image_url TEXT,
+    live_preview_image_url TEXT,
+    face_similarity_percentage FLOAT,
+    face_similarity_verified BOOLEAN DEFAULT FALSE,
+    
+    -- Biometric verification
+    biometric_image_url TEXT,
+    biometric_verified BOOLEAN DEFAULT FALSE,
+    
+    -- OCR data
+    ocr_data JSONB,
+    
+    -- Overall status
+    overall_status VARCHAR(50) DEFAULT 'pending', -- pending, verified, failed
+    
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_documents_user_id ON documents(user_id);
+CREATE INDEX idx_verifications_user_id ON verifications(user_id);

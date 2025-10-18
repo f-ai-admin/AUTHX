@@ -1,0 +1,141 @@
+.home-container {
+  display: flex;
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+  gap: 2rem;
+}
+
+.form-section {
+  flex: 1;
+  max-width: 700px;
+}
+
+.camera-section {
+  flex: 0 0 400px;
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
+.form-card {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-card h2 {
+  color: #1a1a2e;
+  margin-bottom: 1.5rem;
+}
+
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-card textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-card button {
+  width: 100%;
+  padding: 1rem;
+  background-color: #4ecca3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.form-card button:hover {
+  background-color: #3dbb8f;
+}
+
+.form-card button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+}
+
+.camera-section {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.camera-section h2 {
+  color: #1a1a2e;
+  margin-bottom: 1.5rem;
+}
+
+.camera-prompt {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.enable-camera-btn {
+  padding: 1rem 2rem;
+  background-color: #4ecca3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.camera-container {
+  text-align: center;
+}
+
+.webcam {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.capture-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.capture-btn:hover {
+  background-color: #ee5a52;
+}
+
+@media (max-width: 1024px) {
+  .home-container {
+    flex-direction: column;
+  }
+  
+  .camera-section {
+    flex: 1;
+    position: relative;
+    top: 0;
+  }
+}
