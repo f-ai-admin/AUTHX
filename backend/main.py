@@ -1,3 +1,1348 @@
+# # from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+# # from fastapi.middleware.cors import CORSMiddleware
+# # from typing import Optional
+# # import os
+# # from dotenv import load_dotenv
+# # from supabase import create_client, Client
+# # import pytesseract
+# # from PIL import Image
+# # import io
+# # import uuid
+# # from datetime import datetime
+# # import json
+# # import re
+# # from dateutil import parser as date_parser 
+# # # Load environment variables
+# # load_dotenv()
+
+# # # Initialize FastAPI
+# # app = FastAPI(title="F-AI AuthX API")
+
+# # # CORS Configuration
+# # app.add_middleware(
+# #     CORSMiddleware,
+# #     allow_origins=["http://localhost:3000"],  # React default port
+# #     allow_credentials=True,
+# #     allow_methods=["*"],
+# #     allow_headers=["*"],
+# # )
+
+# # # Initialize Supabase client
+# # supabase: Client = create_client(
+# #     os.getenv("SUPABASE_URL"),
+# #     os.getenv("SUPABASE_KEY")
+# # )
+
+# # # Set Tesseract path for Windows (adjust based on your installation)
+# # # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# # @app.get("/")
+# # def read_root():
+# #     return {"message": "F-AI AuthX API is running"}
+
+# # @app.post("/api/users/create")
+# # async def create_user(
+# #     first_name: str = Form(...),
+# #     last_name: str = Form(...),
+# #     email: str = Form(...),
+# #     phone_number: str = Form(...),
+# #     date_of_birth: str = Form(...),
+# #     address: str = Form(...)
+# # ):
+# #     """Create a new user and return user_id"""
+# #     try:
+# #         # Insert user into database
+# #         response = supabase.table("users").insert({
+# #             "first_name": first_name,
+# #             "last_name": last_name,
+# #             "email": email,
+# #             "phone_number": phone_number,
+# #             "date_of_birth": date_of_birth,
+# #             "address": address
+# #         }).execute()
+        
+# #         user_data = response.data[0]
+# #         user_id = user_data['id']
+        
+# #         # Create verification record
+# #         supabase.table("verifications").insert({
+# #             "user_id": user_id
+# #         }).execute()
+        
+# #         return {"success": True, "user_id": user_id, "message": "User created successfully"}
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+
+# # # @app.post("/api/documents/upload")
+# # # async def upload_document(
+# # #     user_id: str = Form(...),
+# # #     document_type: str = Form(...),
+# # #     document_number: str = Form(...),
+# # #     document_image: UploadFile = File(...),
+# # #     user_dob: str = Form(...)
+# # # ):
+# # #     """Upload document image, perform OCR, and verify"""
+# # #     try:
+# # #         # Read image
+# # #         image_bytes = await document_image.read()
+# # #         image = Image.open(io.BytesIO(image_bytes))
+        
+# # #         # Perform OCR
+# # #         ocr_text = pytesseract.image_to_string(image)
+        
+# # #         # Extract document number and DOB from OCR text
+# # #         extracted_doc_number = extract_document_number(ocr_text, document_type)
+# # #         extracted_dob = extract_date_of_birth(ocr_text)
+        
+# # #         # Verify document number match
+# # #         doc_number_match = verify_document_number(document_number, extracted_doc_number)
+        
+# # #         # Verify DOB match
+# # #         dob_match = verify_dob(user_dob, extracted_dob)
+        
+# # #         # Upload image to Supabase Storage
+# # #         file_name = f"{user_id}_{document_type}_{uuid.uuid4()}.jpg"
+# # #         supabase.storage.from_("document-images").upload(
+# # #             file_name,
+# # #             image_bytes,
+# # #             {"content-type": "image/jpeg"}
+# # #         )
+        
+# # #         # Get public URL
+# # #         document_url = supabase.storage.from_("document-images").get_public_url(file_name)
+        
+# # #         # Save document info to database
+# # #         supabase.table("documents").insert({
+# # #             "user_id": user_id,
+# # #             "document_type": document_type,
+# # #             "document_number": document_number,
+# # #             "extracted_document_number": extracted_doc_number,
+# # #             "extracted_date_of_birth": extracted_dob,
+# # #             "document_image_url": document_url
+# # #         }).execute()
+        
+# # #         # Update verification status
+# # #         supabase.table("verifications").update({
+# # #             "document_number_match": doc_number_match,
+# # #             "dob_match": dob_match,
+# # #             "age_verified": dob_match,
+# # #             "document_originality_verified": True,  # Can add more sophisticated checks
+# # #             "ocr_data": {
+# # #                 "raw_text": ocr_text,
+# # #                 "extracted_doc_number": extracted_doc_number,
+# # #                 "extracted_dob": extracted_dob
+# # #             }
+# # #         }).eq("user_id", user_id).execute()
+        
+# # #         return {
+# # #             "success": True,
+# # #             "document_url": document_url,
+# # #             "ocr_text": ocr_text,
+# # #             "extracted_doc_number": extracted_doc_number,
+# # #             "extracted_dob": extracted_dob,
+# # #             "doc_number_match": doc_number_match,
+# # #             "dob_match": dob_match
+# # #         }
+    
+# # #     except Exception as e:
+# # #         raise HTTPException(status_code=400, detail=str(e))
+# # @app.post("/api/documents/upload")
+# # async def upload_document(
+# #     user_id: str = Form(...),
+# #     document_type: str = Form(...),
+# #     document_number: str = Form(...),
+# #     document_image: UploadFile = File(...),
+# #     user_dob: str = Form(...)
+# # ):
+# #     """Upload document image, perform OCR, and verify"""
+# #     try:
+# #         # Read image
+# #         image_bytes = await document_image.read()
+# #         image = Image.open(io.BytesIO(image_bytes))
+        
+# #         # Perform OCR
+# #         ocr_text = pytesseract.image_to_string(image)
+        
+# #         # Extract document number
+# #         extracted_doc_number = extract_document_number(ocr_text, document_type)
+        
+# #         # Extract ALL possible dates from document
+# #         extracted_dates = extract_date_of_birth(ocr_text)
+        
+# #         # Verify document number match
+# #         doc_number_match = verify_document_number(document_number, extracted_doc_number)
+        
+# #         # Verify DOB with flexible matching
+# #         dob_verification = verify_dob_with_retry(user_dob, extracted_dates)
+        
+# #         # Upload image to Supabase Storage with folder structure
+# #         file_path = f"{user_id}/{document_type}_{uuid.uuid4()}.jpg"
+        
+# #         supabase.storage.from_("document-images").upload(
+# #             file_path,
+# #             image_bytes,
+# #             {"content-type": "image/jpeg"}
+# #         )
+        
+# #         # Get public URL
+# #         document_url = supabase.storage.from_("document-images").get_public_url(file_path)
+        
+# #         # Save document info to database
+# #         supabase.table("documents").insert({
+# #             "user_id": user_id,
+# #             "document_type": document_type,
+# #             "document_number": document_number,
+# #             "extracted_document_number": extracted_doc_number,
+# #             "extracted_date_of_birth": dob_verification.get('extracted_dob'),
+# #             "document_image_url": document_url
+# #         }).execute()
+        
+# #         # Update verification status
+# #         supabase.table("verifications").update({
+# #             "document_number_match": doc_number_match,
+# #             "dob_match": dob_verification['match'],
+# #             "age_verified": dob_verification['match'],
+# #             "document_originality_verified": True,
+# #             "ocr_data": {
+# #                 "raw_text": ocr_text,
+# #                 "extracted_doc_number": extracted_doc_number,
+# #                 "extracted_dates": [d.strftime('%Y-%m-%d') for d in extracted_dates],
+# #                 "dob_verification": dob_verification
+# #             }
+# #         }).eq("user_id", user_id).execute()
+        
+# #         return {
+# #             "success": True,
+# #             "document_url": document_url,
+# #             "ocr_text": ocr_text,
+# #             "extracted_doc_number": extracted_doc_number,
+# #             "doc_number_match": doc_number_match,
+# #             "dob_match": dob_verification['match'],
+# #             "dob_verification": dob_verification,
+# #             "requires_correction": not dob_verification['match']
+# #         }
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+# # @app.post("/api/documents/verify-dob-correction")
+# # async def verify_dob_correction(
+# #     user_id: str = Form(...),
+# #     corrected_dob: str = Form(...)
+# # ):
+# #     """Verify corrected date of birth against stored OCR data"""
+# #     try:
+# #         # Get verification record with OCR data
+# #         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+# #         if not verification.data:
+# #             raise HTTPException(status_code=404, detail="Verification not found")
+        
+# #         ocr_data = verification.data[0].get('ocr_data', {})
+# #         extracted_dates_str = ocr_data.get('extracted_dates', [])
+        
+# #         # Convert back to datetime objects
+# #         extracted_dates = [parse_date_flexible(d) for d in extracted_dates_str]
+# #         extracted_dates = [d for d in extracted_dates if d]  # Remove None
+        
+# #         # Verify corrected DOB
+# #         dob_verification = verify_dob_with_retry(corrected_dob, extracted_dates)
+        
+# #         if dob_verification['match']:
+# #             # Update user's DOB and verification status
+# #             supabase.table("users").update({
+# #                 "date_of_birth": corrected_dob
+# #             }).eq("id", user_id).execute()
+            
+# #             supabase.table("verifications").update({
+# #                 "dob_match": True,
+# #                 "age_verified": True,
+# #                 "ocr_data": {
+# #                     **ocr_data,
+# #                     "dob_verification": dob_verification,
+# #                     "dob_corrected": True
+# #                 }
+# #             }).eq("user_id", user_id).execute()
+        
+# #         return {
+# #             "success": True,
+# #             "dob_verification": dob_verification,
+# #             "requires_further_correction": not dob_verification['match']
+# #         }
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))    
+# # @app.post("/api/images/upload-selfie")
+# # async def upload_selfie(
+# #     user_id: str = Form(...),
+# #     selfie_image: UploadFile = File(...)
+# # ):
+# #     """Upload selfie image"""
+# #     try:
+# #         image_bytes = await selfie_image.read()
+        
+# #         # Upload to Supabase Storage
+# #         file_name = f"{user_id}_selfie_{uuid.uuid4()}.jpg"
+# #         supabase.storage.from_("selfie-images").upload(
+# #             file_name,
+# #             image_bytes,
+# #             {"content-type": "image/jpeg"}
+# #         )
+        
+# #         selfie_url = supabase.storage.from_("selfie-images").get_public_url(file_name)
+        
+# #         # Update verification record
+# #         supabase.table("verifications").update({
+# #             "selfie_image_url": selfie_url
+# #         }).eq("user_id", user_id).execute()
+        
+# #         return {"success": True, "selfie_url": selfie_url}
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+
+# # @app.post("/api/images/upload-live-preview")
+# # async def upload_live_preview(
+# #     user_id: str = Form(...),
+# #     live_image: UploadFile = File(...)
+# # ):
+# #     """Upload live camera snapshot"""
+# #     try:
+# #         image_bytes = await live_image.read()
+        
+# #         # Upload to Supabase Storage
+# #         file_name = f"{user_id}_live_{uuid.uuid4()}.jpg"
+# #         supabase.storage.from_("live-preview-images").upload(
+# #             file_name,
+# #             image_bytes,
+# #             {"content-type": "image/jpeg"}
+# #         )
+        
+# #         live_url = supabase.storage.from_("live-preview-images").get_public_url(file_name)
+        
+# #         # Update verification record
+# #         supabase.table("verifications").update({
+# #             "live_preview_image_url": live_url
+# #         }).eq("user_id", user_id).execute()
+        
+# #         return {"success": True, "live_url": live_url}
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+
+# # @app.post("/api/verify/face-similarity")
+# # async def verify_face_similarity(
+# #     user_id: str = Form(...)
+# # ):
+# #     """
+# #     Verify face similarity using Buffalo model
+# #     NOTE: This is a placeholder. You'll integrate the trained Buffalo model here.
+# #     """
+# #     try:
+# #         # TODO: Implement Buffalo face recognition model here
+# #         # For now, return a mock similarity score
+        
+# #         # Get verification record
+# #         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+# #         if not verification.data:
+# #             raise HTTPException(status_code=404, detail="Verification record not found")
+        
+# #         # Placeholder for Buffalo model integration
+# #         # similarity_score = buffalo_model.compare_faces(selfie_url, live_url)
+        
+# #         # Mock similarity score for demonstration
+# #         similarity_score = 85.5  # This will be replaced with actual Buffalo model output
+        
+# #         is_verified = similarity_score >= 75.0  # Threshold
+        
+# #         # Update verification status
+# #         supabase.table("verifications").update({
+# #             "face_similarity_percentage": similarity_score,
+# #             "face_similarity_verified": is_verified
+# #         }).eq("user_id", user_id).execute()
+        
+# #         return {
+# #             "success": True,
+# #             "similarity_score": similarity_score,
+# #             "is_verified": is_verified
+# #         }
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+# # @app.post("/api/users/lookup-by-email")
+# # async def lookup_user_by_email(email: str = Form(...)):
+# #     """Look up user by email and return user data with verification status"""
+# #     try:
+# #         # Find user by email
+# #         user_response = supabase.table("users").select("*").eq("email", email).execute()
+        
+# #         if not user_response.data or len(user_response.data) == 0:
+# #             raise HTTPException(status_code=404, detail="No user found with this email address")
+        
+# #         user = user_response.data[0]
+# #         user_id = user['id']
+        
+# #         # Get verification status
+# #         verification_response = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+# #         verification = verification_response.data[0] if verification_response.data else None
+        
+# #         # Check what's completed
+# #         steps_completed = {
+# #             "personal_info": True,  # If user exists, this is done
+# #             "document_uploaded": verification and verification.get('document_number_match') is not None,
+# #             "selfie_uploaded": verification and verification.get('selfie_image_url') is not None,
+# #             "biometric_uploaded": verification and verification.get('biometric_image_url') is not None,
+# #             "face_verified": verification and verification.get('face_similarity_verified') is not None
+# #         }
+        
+# #         return {
+# #             "success": True,
+# #             "user_id": user_id,
+# #             "user_data": {
+# #                 "first_name": user['first_name'],
+# #                 "last_name": user['last_name'],
+# #                 "email": user['email'],
+# #                 "date_of_birth": user['date_of_birth']
+# #             },
+# #             "verification_status": verification,
+# #             "steps_completed": steps_completed,
+# #             "is_fully_verified": all(steps_completed.values())
+# #         }
+    
+# #     except HTTPException:
+# #         raise
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+
+# # @app.post("/api/biometric/upload")
+# # async def upload_biometric(
+# #     user_id: str = Form(...),
+# #     biometric_image: UploadFile = File(...)
+# # ):
+# #     """Upload biometric data"""
+# #     try:
+# #         image_bytes = await biometric_image.read()
+        
+# #         # Upload to Supabase Storage
+# #         file_name = f"{user_id}_biometric_{uuid.uuid4()}.jpg"
+# #         supabase.storage.from_("biometric-images").upload(
+# #             file_name,
+# #             image_bytes,
+# #             {"content-type": "image/jpeg"}
+# #         )
+        
+# #         biometric_url = supabase.storage.from_("biometric-images").get_public_url(file_name)
+        
+# #         # Update verification record
+# #         supabase.table("verifications").update({
+# #             "biometric_image_url": biometric_url,
+# #             "biometric_verified": True  # Add actual biometric verification logic
+# #         }).eq("user_id", user_id).execute()
+        
+# #         return {"success": True, "biometric_url": biometric_url}
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+
+# # @app.get("/api/verification/status/{user_id}")
+# # async def get_verification_status(user_id: str):
+# #     """Get verification status for a user"""
+# #     try:
+# #         # Get verification data
+# #         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+# #         if not verification.data:
+# #             raise HTTPException(status_code=404, detail="Verification not found")
+        
+# #         return {"success": True, "verification": verification.data[0]}
+    
+# #     except Exception as e:
+# #         raise HTTPException(status_code=400, detail=str(e))
+
+# # #############################
+# # def normalize_date_string(date_str: str) -> str:
+# #     """Clean and normalize date string for better parsing"""
+# #     if not date_str:
+# #         return ""
+    
+# #     # Remove extra whitespace
+# #     date_str = ' '.join(date_str.split())
+    
+# #     # Common replacements
+# #     replacements = {
+# #         'st': '', 'nd': '', 'rd': '', 'th': '',  # Remove ordinals (1st, 2nd, etc.)
+# #         'of': '', 'the': '',  # Remove common words
+# #         '/': '-', '.': '-',  # Standardize separators
+# #     }
+    
+# #     for old, new in replacements.items():
+# #         date_str = date_str.replace(old, new)
+    
+# #     return date_str.strip()
+
+# # def extract_date_of_birth(ocr_text: str) -> list:
+# #     """Extract ALL possible dates from OCR text and return as list"""
+# #     dates_found = []
+    
+# #     # Normalize text
+# #     ocr_text = normalize_date_string(ocr_text)
+    
+# #     # Common date patterns
+# #     date_patterns = [
+# #         # DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+# #         r'\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b',
+# #         r'\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b',
+        
+# #         # YYYY/MM/DD, YYYY-MM-DD
+# #         r'\b(\d{4})[/-](\d{1,2})[/-](\d{1,2})\b',
+        
+# #         # DD Month YYYY (e.g., 15 January 1990)
+# #         r'\b(\d{1,2})\s+(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{4})\b',
+        
+# #         # Month DD, YYYY (e.g., January 15, 1990)
+# #         r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2}),?\s+(\d{4})\b',
+        
+# #         # DDMMYYYY (no separators)
+# #         r'\b(\d{2})(\d{2})(\d{4})\b',
+# #     ]
+    
+# #     for pattern in date_patterns:
+# #         matches = re.findall(pattern, ocr_text, re.IGNORECASE)
+# #         for match in matches:
+# #             try:
+# #                 # Try to parse the matched date
+# #                 date_string = '-'.join(str(m) for m in match)
+# #                 parsed_date = date_parser.parse(date_string, fuzzy=True)
+                
+# #                 # Only accept reasonable birth dates (between 1900 and current year)
+# #                 if 1900 <= parsed_date.year <= datetime.now().year:
+# #                     dates_found.append(parsed_date)
+# #             except:
+# #                 continue
+    
+# #     return dates_found
+
+# # def parse_date_flexible(date_input: str) -> Optional[datetime]:
+# #     """
+# #     Parse date string with multiple format support
+# #     Returns datetime object or None
+# #     """
+# #     if not date_input:
+# #         return None
+    
+# #     try:
+# #         # Clean the input
+# #         date_input = normalize_date_string(str(date_input))
+        
+# #         # Use dateutil parser for flexible parsing
+# #         parsed_date = date_parser.parse(date_input, fuzzy=True, dayfirst=True)
+# #         return parsed_date
+# #     except:
+# #         return None
+
+# # def compare_dates_flexible(date1_str: str, date2_str: str) -> dict:
+# #     """
+# #     Compare two dates with flexible parsing
+# #     Returns dict with match status, similarity score, and both parsed dates
+# #     """
+# #     result = {
+# #         'match': False,
+# #         'similarity_score': 0.0,
+# #         'date1_parsed': None,
+# #         'date2_parsed': None,
+# #         'date1_formatted': None,
+# #         'date2_formatted': None,
+# #         'match_type': 'no_match'
+# #     }
+    
+# #     # Parse both dates
+# #     date1 = parse_date_flexible(date1_str)
+# #     date2 = parse_date_flexible(date2_str)
+    
+# #     if not date1 or not date2:
+# #         return result
+    
+# #     result['date1_parsed'] = date1
+# #     result['date2_parsed'] = date2
+# #     result['date1_formatted'] = date1.strftime('%Y-%m-%d')
+# #     result['date2_formatted'] = date2.strftime('%Y-%m-%d')
+    
+# #     # Exact match
+# #     if date1.date() == date2.date():
+# #         result['match'] = True
+# #         result['similarity_score'] = 1.0
+# #         result['match_type'] = 'exact'
+# #         return result
+    
+# #     # Check if only day/month are swapped (common OCR error)
+# #     if date1.year == date2.year:
+# #         if date1.day == date2.month and date1.month == date2.day:
+# #             result['match'] = True
+# #             result['similarity_score'] = 0.95
+# #             result['match_type'] = 'day_month_swapped'
+# #             return result
+    
+# #     # Check for close dates (within 1 day - typo tolerance)
+# #     days_diff = abs((date1.date() - date2.date()).days)
+# #     if days_diff <= 1:
+# #         result['match'] = True
+# #         result['similarity_score'] = 0.90
+# #         result['match_type'] = 'close_match'
+# #         return result
+    
+# #     # Check if year matches but day/month different (possible OCR error)
+# #     if date1.year == date2.year:
+# #         result['similarity_score'] = 0.50
+# #         result['match_type'] = 'year_match_only'
+    
+# #     return result
+
+# # def verify_dob_with_retry(user_dob: str, extracted_dates: list) -> dict:
+# #     """
+# #     Verify DOB against all extracted dates from document
+# #     Returns best match with suggestions for user correction
+# #     """
+# #     if not extracted_dates:
+# #         return {
+# #             'match': False,
+# #             'confidence': 0.0,
+# #             'suggestion': None,
+# #             'message': 'No date of birth found in document'
+# #         }
+    
+# #     best_match = None
+# #     best_score = 0.0
+    
+# #     # Try matching against all extracted dates
+# #     for extracted_date in extracted_dates:
+# #         comparison = compare_dates_flexible(
+# #             user_dob, 
+# #             extracted_date.strftime('%Y-%m-%d')
+# #         )
+        
+# #         if comparison['similarity_score'] > best_score:
+# #             best_score = comparison['similarity_score']
+# #             best_match = comparison
+    
+# #     # Determine result
+# #     if best_score >= 0.90:  # High confidence match
+# #         return {
+# #             'match': True,
+# #             'confidence': best_score,
+# #             'extracted_dob': best_match['date2_formatted'],
+# #             'match_type': best_match['match_type'],
+# #             'suggestion': None,
+# #             'message': f"Date of birth verified ({best_match['match_type']})"
+# #         }
+# #     elif best_score >= 0.50:  # Possible match, need correction
+# #         return {
+# #             'match': False,
+# #             'confidence': best_score,
+# #             'extracted_dob': best_match['date2_formatted'],
+# #             'match_type': best_match['match_type'],
+# #             'suggestion': best_match['date2_formatted'],
+# #             'message': f"Date mismatch detected. Document shows: {best_match['date2_formatted']}. Please correct your date of birth."
+# #         }
+# #     else:  # No good match
+# #         suggestions = [d.strftime('%Y-%m-%d') for d in extracted_dates[:3]]  # Top 3
+# #         return {
+# #             'match': False,
+# #             'confidence': best_score,
+# #             'extracted_dob': suggestions[0] if suggestions else None,
+# #             'match_type': 'no_match',
+# #             'suggestion': suggestions[0] if suggestions else None,
+# #             'message': f"Date of birth doesn't match. Found in document: {', '.join(suggestions)}"
+# #         }
+
+# # ###########################
+
+
+
+# # # Helper functions for OCR processing
+
+# # def extract_document_number(ocr_text: str, doc_type: str) -> Optional[str]:
+# #     """Extract document number based on document type"""
+# #     ocr_text = ocr_text.upper()
+    
+# #     # Aadhar: 12 digit number
+# #     if doc_type == "aadhar":
+# #         match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', ocr_text)
+# #         return match.group(0).replace(" ", "") if match else None
+    
+# #     # PAN: 10 character alphanumeric
+# #     elif doc_type == "pan":
+# #         match = re.search(r'\b[A-Z]{5}\d{4}[A-Z]\b', ocr_text)
+# #         return match.group(0) if match else None
+    
+# #     # Driving License: varies by state
+# #     elif doc_type == "driving_license":
+# #         match = re.search(r'\b[A-Z]{2}\d{2}\s?\d{11}\b', ocr_text)
+# #         return match.group(0) if match else None
+    
+# #     # Passport: 8 characters
+# #     elif doc_type == "passport":
+# #         match = re.search(r'\b[A-Z]\d{7}\b', ocr_text)
+# #         return match.group(0) if match else None
+    
+# #     # Voter ID
+# #     elif doc_type == "voter_id":
+# #         match = re.search(r'\b[A-Z]{3}\d{7}\b', ocr_text)
+# #         return match.group(0) if match else None
+    
+# #     return None
+
+# # def extract_date_of_birth(ocr_text: str) -> Optional[str]:
+# #     """Extract date of birth from OCR text"""
+# #     # Common date patterns: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+# #     date_patterns = [
+# #         r'\b(\d{2})[/-](\d{2})[/-](\d{4})\b',
+# #         r'\b(\d{2})\.(\d{2})\.(\d{4})\b',
+# #     ]
+    
+# #     for pattern in date_patterns:
+# #         match = re.search(pattern, ocr_text)
+# #         if match:
+# #             day, month, year = match.groups()
+# #             return f"{year}-{month}-{day}"  # Return in ISO format
+    
+# #     return None
+
+# # def verify_document_number(entered_number: str, extracted_number: Optional[str]) -> bool:
+# #     """Verify if document numbers match"""
+# #     if not extracted_number:
+# #         return False
+    
+# #     # Remove spaces and compare
+# #     entered_clean = entered_number.replace(" ", "").upper()
+# #     extracted_clean = extracted_number.replace(" ", "").upper()
+    
+# #     return entered_clean == extracted_clean
+
+# # def verify_dob(entered_dob: str, extracted_dob: Optional[str]) -> bool:
+# #     """Verify if dates of birth match"""
+# #     if not extracted_dob:
+# #         return False
+    
+# #     return entered_dob == extracted_dob
+
+# # if __name__ == "__main__":
+# #     import uvicorn
+# #     uvicorn.run(app, host="0.0.0.0", port=8000)
+# from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+# from fastapi.middleware.cors import CORSMiddleware
+# from typing import Optional
+# import os
+# from dotenv import load_dotenv
+# from supabase import create_client, Client
+# import pytesseract
+# from PIL import Image
+# import io
+# import uuid
+# from datetime import datetime
+# import json
+# import re
+# from dateutil import parser as date_parser
+
+# # Load environment variables
+# load_dotenv()
+
+# # Initialize FastAPI
+# app = FastAPI(title="F-AI AuthX API")
+
+# # CORS Configuration
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# # Initialize Supabase client
+# supabase: Client = create_client(
+#     os.getenv("SUPABASE_URL"),
+#     os.getenv("SUPABASE_KEY")
+# )
+
+# # Set Tesseract path for Windows (uncomment if needed)
+# # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# @app.get("/")
+# def read_root():
+#     return {"message": "F-AI AuthX API is running"}
+
+
+# # ===== DATE HANDLING FUNCTIONS =====
+
+# def normalize_date_string(date_str: str) -> str:
+#     """Clean and normalize date string for better parsing"""
+#     if not date_str:
+#         return ""
+    
+#     date_str = ' '.join(date_str.split())
+    
+#     replacements = {
+#         'st': '', 'nd': '', 'rd': '', 'th': '',
+#         'of': '', 'the': '',
+#         '/': '-', '.': '-',
+#     }
+    
+#     for old, new in replacements.items():
+#         date_str = date_str.replace(old, new)
+    
+#     return date_str.strip()
+
+
+# def extract_date_of_birth(ocr_text: str) -> list:
+#     """Extract ALL possible dates from OCR text and return as list"""
+#     dates_found = []
+    
+#     if not ocr_text:
+#         return dates_found
+    
+#     ocr_text = normalize_date_string(ocr_text)
+    
+#     date_patterns = [
+#         r'\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b',
+#         r'\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b',
+#         r'\b(\d{4})[/-](\d{1,2})[/-](\d{1,2})\b',
+#         r'\b(\d{1,2})\s+(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{4})\b',
+#         r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2}),?\s+(\d{4})\b',
+#         r'\b(\d{2})(\d{2})(\d{4})\b',
+#     ]
+    
+#     for pattern in date_patterns:
+#         matches = re.findall(pattern, ocr_text, re.IGNORECASE)
+#         for match in matches:
+#             try:
+#                 date_string = '-'.join(str(m) for m in match)
+#                 parsed_date = date_parser.parse(date_string, fuzzy=True)
+                
+#                 if 1900 <= parsed_date.year <= datetime.now().year:
+#                     dates_found.append(parsed_date)
+#             except:
+#                 continue
+    
+#     return dates_found
+
+
+# def parse_date_flexible(date_input: str) -> Optional[datetime]:
+#     """Parse date string with multiple format support"""
+#     if not date_input:
+#         return None
+    
+#     try:
+#         date_input = normalize_date_string(str(date_input))
+#         parsed_date = date_parser.parse(date_input, fuzzy=True, dayfirst=True)
+#         return parsed_date
+#     except:
+#         return None
+
+
+# def compare_dates_flexible(date1_str: str, date2_str: str) -> dict:
+#     """Compare two dates with flexible parsing"""
+#     result = {
+#         'match': False,
+#         'similarity_score': 0.0,
+#         'date1_parsed': None,
+#         'date2_parsed': None,
+#         'date1_formatted': None,
+#         'date2_formatted': None,
+#         'match_type': 'no_match'
+#     }
+    
+#     date1 = parse_date_flexible(date1_str)
+#     date2 = parse_date_flexible(date2_str)
+    
+#     if not date1 or not date2:
+#         return result
+    
+#     result['date1_parsed'] = date1
+#     result['date2_parsed'] = date2
+#     result['date1_formatted'] = date1.strftime('%Y-%m-%d')
+#     result['date2_formatted'] = date2.strftime('%Y-%m-%d')
+    
+#     # Exact match
+#     if date1.date() == date2.date():
+#         result['match'] = True
+#         result['similarity_score'] = 1.0
+#         result['match_type'] = 'exact'
+#         return result
+    
+#     # Day/month swapped
+#     if date1.year == date2.year:
+#         if date1.day == date2.month and date1.month == date2.day:
+#             result['match'] = True
+#             result['similarity_score'] = 0.95
+#             result['match_type'] = 'day_month_swapped'
+#             return result
+    
+#     # Close dates (within 1 day)
+#     days_diff = abs((date1.date() - date2.date()).days)
+#     if days_diff <= 1:
+#         result['match'] = True
+#         result['similarity_score'] = 0.90
+#         result['match_type'] = 'close_match'
+#         return result
+    
+#     # Year matches only
+#     if date1.year == date2.year:
+#         result['similarity_score'] = 0.50
+#         result['match_type'] = 'year_match_only'
+    
+#     return result
+
+
+# def verify_dob_with_retry(user_dob: str, extracted_dates: list) -> dict:
+#     """Verify DOB against all extracted dates from document"""
+#     if not extracted_dates or len(extracted_dates) == 0:
+#         return {
+#             'match': False,
+#             'confidence': 0.0,
+#             'suggestion': None,
+#             'extracted_dob': None,
+#             'message': 'No date of birth found in document'
+#         }
+    
+#     best_match = None
+#     best_score = 0.0
+    
+#     for extracted_date in extracted_dates:
+#         comparison = compare_dates_flexible(
+#             user_dob, 
+#             extracted_date.strftime('%Y-%m-%d')
+#         )
+        
+#         if comparison['similarity_score'] > best_score:
+#             best_score = comparison['similarity_score']
+#             best_match = comparison
+    
+#     if best_score >= 0.90:
+#         return {
+#             'match': True,
+#             'confidence': best_score,
+#             'extracted_dob': best_match['date2_formatted'],
+#             'match_type': best_match['match_type'],
+#             'suggestion': None,
+#             'message': f"Date of birth verified ({best_match['match_type']})"
+#         }
+#     elif best_score >= 0.50:
+#         return {
+#             'match': False,
+#             'confidence': best_score,
+#             'extracted_dob': best_match['date2_formatted'],
+#             'match_type': best_match['match_type'],
+#             'suggestion': best_match['date2_formatted'],
+#             'message': f"Date mismatch. Document shows: {best_match['date2_formatted']}"
+#         }
+#     else:
+#         suggestions = [d.strftime('%Y-%m-%d') for d in extracted_dates[:3]]
+#         return {
+#             'match': False,
+#             'confidence': best_score,
+#             'extracted_dob': suggestions[0] if suggestions else None,
+#             'match_type': 'no_match',
+#             'suggestion': suggestions[0] if suggestions else None,
+#             'message': f"Date of birth doesn't match document"
+#         }
+
+
+# # ===== DOCUMENT NUMBER EXTRACTION =====
+
+# def extract_document_number(ocr_text: str, doc_type: str) -> Optional[str]:
+#     """Extract document number based on document type"""
+#     if not ocr_text:
+#         return None
+        
+#     ocr_text = ocr_text.upper()
+    
+#     # Aadhar: 12 digit number
+#     if doc_type == "aadhar":
+#         match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', ocr_text)
+#         return match.group(0).replace(" ", "") if match else None
+    
+#     # PAN: 10 character alphanumeric
+#     elif doc_type == "pan":
+#         match = re.search(r'\b[A-Z]{5}\d{4}[A-Z]\b', ocr_text)
+#         return match.group(0) if match else None
+    
+#     # Driving License: varies by state
+#     elif doc_type == "driving_license":
+#         match = re.search(r'\b[A-Z]{2}\d{2}\s?\d{11}\b', ocr_text)
+#         return match.group(0) if match else None
+    
+#     # Passport: 8 characters
+#     elif doc_type == "passport":
+#         match = re.search(r'\b[A-Z]\d{7}\b', ocr_text)
+#         return match.group(0) if match else None
+    
+#     # Voter ID
+#     elif doc_type == "voter_id":
+#         match = re.search(r'\b[A-Z]{3}\d{7}\b', ocr_text)
+#         return match.group(0) if match else None
+    
+#     return None
+
+
+# def verify_document_number(entered_number: str, extracted_number: Optional[str]) -> bool:
+#     """Verify if document numbers match"""
+#     if not extracted_number:
+#         return False
+    
+#     entered_clean = entered_number.replace(" ", "").upper()
+#     extracted_clean = extracted_number.replace(" ", "").upper()
+    
+#     return entered_clean == extracted_clean
+
+
+# # ===== API ENDPOINTS =====
+
+# @app.post("/api/users/create")
+# async def create_user(
+#     first_name: str = Form(...),
+#     last_name: str = Form(...),
+#     email: str = Form(...),
+#     phone_number: str = Form(...),
+#     date_of_birth: str = Form(...),
+#     address: str = Form(...)
+# ):
+#     """Create a new user and return user_id"""
+#     try:
+#         response = supabase.table("users").insert({
+#             "first_name": first_name,
+#             "last_name": last_name,
+#             "email": email,
+#             "phone_number": phone_number,
+#             "date_of_birth": date_of_birth,
+#             "address": address
+#         }).execute()
+        
+#         user_data = response.data[0]
+#         user_id = user_data['id']
+        
+#         supabase.table("verifications").insert({
+#             "user_id": user_id
+#         }).execute()
+        
+#         return {"success": True, "user_id": user_id, "message": "User created successfully"}
+    
+#     except Exception as e:
+#         print(f"Error: {str(e)}")
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.post("/api/documents/upload")
+# async def upload_document(
+#     user_id: str = Form(...),
+#     document_type: str = Form(...),
+#     document_number: str = Form(...),
+#     document_image: UploadFile = File(...),
+#     user_dob: str = Form(...)
+# ):
+#     """Upload document image, perform OCR, and verify"""
+#     try:
+#         # Read image
+#         image_bytes = await document_image.read()
+#         image = Image.open(io.BytesIO(image_bytes))
+        
+#         # Perform OCR
+#         ocr_text = pytesseract.image_to_string(image)
+#         print(f"OCR Text: {ocr_text[:200]}...")  # Debug log
+        
+#         # Extract document number
+#         extracted_doc_number = extract_document_number(ocr_text, document_type)
+        
+#         # Extract ALL possible dates from document
+#         extracted_dates = extract_date_of_birth(ocr_text)
+#         print(f"Extracted dates: {extracted_dates}")  # Debug log
+        
+#         # Verify document number match
+#         doc_number_match = verify_document_number(document_number, extracted_doc_number)
+        
+#         # Verify DOB with flexible matching
+#         dob_verification = verify_dob_with_retry(user_dob, extracted_dates)
+#         print(f"DOB Verification: {dob_verification}")  # Debug log
+        
+#         # Upload image to Supabase Storage
+#         file_path = f"{user_id}/{document_type}_{uuid.uuid4()}.jpg"
+        
+#         supabase.storage.from_("document-images").upload(
+#             file_path,
+#             image_bytes,
+#             {"content-type": "image/jpeg"}
+#         )
+        
+#         document_url = supabase.storage.from_("document-images").get_public_url(file_path)
+        
+#         # Save document info
+#         supabase.table("documents").insert({
+#             "user_id": user_id,
+#             "document_type": document_type,
+#             "document_number": document_number,
+#             "extracted_document_number": extracted_doc_number,
+#             "extracted_date_of_birth": dob_verification.get('extracted_dob'),
+#             "document_image_url": document_url
+#         }).execute()
+        
+#         # Update verification status
+#         supabase.table("verifications").update({
+#             "document_number_match": doc_number_match,
+#             "dob_match": dob_verification['match'],
+#             "age_verified": dob_verification['match'],
+#             "document_originality_verified": True,
+#             "ocr_data": {
+#                 "raw_text": ocr_text,
+#                 "extracted_doc_number": extracted_doc_number,
+#                 "extracted_dates": [d.strftime('%Y-%m-%d') for d in extracted_dates] if extracted_dates else [],
+#                 "dob_verification": dob_verification
+#             }
+#         }).eq("user_id", user_id).execute()
+        
+#         return {
+#             "success": True,
+#             "document_url": document_url,
+#             "ocr_text": ocr_text,
+#             "extracted_doc_number": extracted_doc_number,
+#             "doc_number_match": doc_number_match,
+#             "dob_match": dob_verification['match'],
+#             "dob_verification": dob_verification,
+#             "requires_correction": not dob_verification['match']
+#         }
+    
+#     except Exception as e:
+#         print(f"Error in upload_document: {str(e)}")  # Debug log
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.post("/api/documents/verify-dob-correction")
+# async def verify_dob_correction(
+#     user_id: str = Form(...),
+#     corrected_dob: str = Form(...)
+# ):
+#     """Verify corrected date of birth against stored OCR data"""
+#     try:
+#         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+#         if not verification.data:
+#             raise HTTPException(status_code=404, detail="Verification not found")
+        
+#         ocr_data = verification.data[0].get('ocr_data', {})
+#         extracted_dates_str = ocr_data.get('extracted_dates', [])
+        
+#         # Convert back to datetime objects
+#         extracted_dates = []
+#         for d in extracted_dates_str:
+#             parsed = parse_date_flexible(d)
+#             if parsed:
+#                 extracted_dates.append(parsed)
+        
+#         # Verify corrected DOB
+#         dob_verification = verify_dob_with_retry(corrected_dob, extracted_dates)
+        
+#         if dob_verification['match']:
+#             # Update user's DOB and verification status
+#             supabase.table("users").update({
+#                 "date_of_birth": corrected_dob
+#             }).eq("id", user_id).execute()
+            
+#             supabase.table("verifications").update({
+#                 "dob_match": True,
+#                 "age_verified": True,
+#                 "ocr_data": {
+#                     **ocr_data,
+#                     "dob_verification": dob_verification,
+#                     "dob_corrected": True
+#                 }
+#             }).eq("user_id", user_id).execute()
+        
+#         return {
+#             "success": True,
+#             "dob_verification": dob_verification,
+#             "requires_further_correction": not dob_verification['match']
+#         }
+    
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.post("/api/images/upload-selfie")
+# async def upload_selfie(
+#     user_id: str = Form(...),
+#     selfie_image: UploadFile = File(...)
+# ):
+#     """Upload selfie image"""
+#     try:
+#         image_bytes = await selfie_image.read()
+#         file_path = f"{user_id}/selfie_{uuid.uuid4()}.jpg"
+        
+#         supabase.storage.from_("selfie-images").upload(
+#             file_path,
+#             image_bytes,
+#             {"content-type": "image/jpeg"}
+#         )
+        
+#         selfie_url = supabase.storage.from_("selfie-images").get_public_url(file_path)
+        
+#         supabase.table("verifications").update({
+#             "selfie_image_url": selfie_url
+#         }).eq("user_id", user_id).execute()
+        
+#         return {"success": True, "selfie_url": selfie_url}
+    
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.post("/api/images/upload-live-preview")
+# async def upload_live_preview(
+#     user_id: str = Form(...),
+#     live_image: UploadFile = File(...)
+# ):
+#     """Upload live camera snapshot"""
+#     try:
+#         image_bytes = await live_image.read()
+#         file_path = f"{user_id}/live_{uuid.uuid4()}.jpg"
+        
+#         supabase.storage.from_("live-preview-images").upload(
+#             file_path,
+#             image_bytes,
+#             {"content-type": "image/jpeg"}
+#         )
+        
+#         live_url = supabase.storage.from_("live-preview-images").get_public_url(file_path)
+        
+#         supabase.table("verifications").update({
+#             "live_preview_image_url": live_url
+#         }).eq("user_id", user_id).execute()
+        
+#         return {"success": True, "live_url": live_url}
+    
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.post("/api/verify/face-similarity")
+# async def verify_face_similarity(
+#     user_id: str = Form(...)
+# ):
+#     """Verify face similarity using Buffalo model (placeholder)"""
+#     try:
+#         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+#         if not verification.data:
+#             raise HTTPException(status_code=404, detail="Verification record not found")
+        
+#         # Placeholder - replace with actual Buffalo model
+#         similarity_score = 85.5
+#         is_verified = similarity_score >= 75.0
+        
+#         supabase.table("verifications").update({
+#             "face_similarity_percentage": similarity_score,
+#             "face_similarity_verified": is_verified
+#         }).eq("user_id", user_id).execute()
+        
+#         return {
+#             "success": True,
+#             "similarity_score": similarity_score,
+#             "is_verified": is_verified
+#         }
+    
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.post("/api/biometric/upload")
+# async def upload_biometric(
+#     user_id: str = Form(...),
+#     biometric_image: UploadFile = File(...)
+# ):
+#     """Upload biometric data"""
+#     try:
+#         image_bytes = await biometric_image.read()
+#         file_path = f"{user_id}/biometric_{uuid.uuid4()}.jpg"
+        
+#         supabase.storage.from_("biometric-images").upload(
+#             file_path,
+#             image_bytes,
+#             {"content-type": "image/jpeg"}
+#         )
+        
+#         biometric_url = supabase.storage.from_("biometric-images").get_public_url(file_path)
+        
+#         supabase.table("verifications").update({
+#             "biometric_image_url": biometric_url,
+#             "biometric_verified": True
+#         }).eq("user_id", user_id).execute()
+        
+#         return {"success": True, "biometric_url": biometric_url}
+    
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.get("/api/verification/status/{user_id}")
+# async def get_verification_status(user_id: str):
+#     """Get verification status for a user"""
+#     try:
+#         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+#         if not verification.data:
+#             raise HTTPException(status_code=404, detail="Verification not found")
+        
+#         return {"success": True, "verification": verification.data[0]}
+    
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# @app.post("/api/users/lookup-by-email")
+# async def lookup_user_by_email(email: str = Form(...)):
+#     """Look up user by email and return user data with verification status"""
+#     try:
+#         user_response = supabase.table("users").select("*").eq("email", email).execute()
+        
+#         if not user_response.data or len(user_response.data) == 0:
+#             raise HTTPException(status_code=404, detail="No user found with this email address")
+        
+#         user = user_response.data[0]
+#         user_id = user['id']
+        
+#         verification_response = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+#         verification = verification_response.data[0] if verification_response.data else None
+        
+#         steps_completed = {
+#             "personal_info": True,
+#             "document_uploaded": verification and verification.get('document_number_match') is not None,
+#             "selfie_uploaded": verification and verification.get('selfie_image_url') is not None,
+#             "biometric_uploaded": verification and verification.get('biometric_image_url') is not None,
+#             "face_verified": verification and verification.get('face_similarity_verified') is not None
+#         }
+        
+#         return {
+#             "success": True,
+#             "user_id": user_id,
+#             "user_data": {
+#                 "first_name": user['first_name'],
+#                 "last_name": user['last_name'],
+#                 "email": user['email'],
+#                 "date_of_birth": user['date_of_birth']
+#             },
+#             "verification_status": verification,
+#             "steps_completed": steps_completed,
+#             "is_fully_verified": all(steps_completed.values())
+#         }
+    
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
@@ -11,6 +1356,16 @@ import uuid
 from datetime import datetime
 import json
 import re
+from dateutil import parser as date_parser
+import cv2
+import numpy as np
+
+# NEW: Face verification imports
+import insightface
+from insightface.app import FaceAnalysis
+from deepface import DeepFace
+import requests
+import tempfile
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +1376,8 @@ app = FastAPI(title="F-AI AuthX API")
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React default port
+    allow_origins=["*"],
+    # allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,12 +1389,396 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_KEY")
 )
 
-# Set Tesseract path for Windows (adjust based on your installation)
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Initialize InsightFace Buffalo model
+print("Loading InsightFace Buffalo model...")
+face_app = FaceAnalysis(
+    name='buffalo_l',
+    providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+)
+face_app.prepare(ctx_id=0, det_size=(640, 640))
+print("✅ Face recognition model loaded!")
 
-@app.get("/")
-def read_root():
-    return {"message": "F-AI AuthX API is running"}
+
+# ===== FACE VERIFICATION FUNCTIONS =====
+
+def extract_face_from_image(image_bytes: bytes) -> Optional[dict]:
+    """
+    Extract face from image and return face data with embedding
+    
+    Args:
+        image_bytes: Image as bytes
+    
+    Returns:
+        dict with embedding, bbox, confidence or None
+    """
+    try:
+        # Convert bytes to numpy array
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if img is None:
+            return None
+        
+        # Detect faces
+        faces = face_app.get(img)
+        
+        if len(faces) == 0:
+            return None
+        
+        # Get largest face (most prominent)
+        face = max(faces, key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]))
+        
+        return {
+            'embedding': face.embedding.tolist(),  # Convert to list for JSON storage
+            'bbox': face.bbox.tolist(),
+            'confidence': float(face.det_score)
+        }
+    
+    except Exception as e:
+        print(f"Error extracting face: {e}")
+        return None
+
+
+def compare_face_embeddings(embedding1: list, embedding2: list, threshold: float = 0.20) -> dict:
+    """
+    Compare two face embeddings using cosine similarity
+    
+    Args:
+        embedding1: First face embedding (512-dim)
+        embedding2: Second face embedding (512-dim)
+        threshold: Similarity threshold (default 0.40)
+    
+    Returns:
+        dict with match status and similarity score
+    """
+    try:
+        emb1 = np.array(embedding1)
+        emb2 = np.array(embedding2)
+        
+        # Cosine similarity
+        similarity = np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
+        
+        # Convert to percentage
+        similarity_percentage = ((similarity + 1) / 2) * 100
+        
+        # Convert numpy types to Python native types for JSON serialization
+        return {
+            'match': bool(similarity >= threshold),  # Convert numpy.bool_ to bool
+            'similarity': float(similarity),
+            'similarity_percentage': float(similarity_percentage),
+            'threshold': float(threshold)
+        }
+    
+    except Exception as e:
+        print(f"Error comparing embeddings: {e}")
+        return {
+            'match': False,
+            'similarity': 0.0,
+            'similarity_percentage': 0.0,
+            'error': str(e)
+        }
+
+
+def check_liveness(image_bytes: bytes) -> dict:
+    """
+    Check if image is from a real person (liveness detection)
+    
+    Args:
+        image_bytes: Image as bytes
+    
+    Returns:
+        dict with liveness status
+    """
+    try:
+        # Save to temp file for DeepFace
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+            tmp.write(image_bytes)
+            tmp_path = tmp.name
+        
+        # Perform anti-spoofing analysis
+        result = DeepFace.extract_faces(
+            img_path=tmp_path,
+            anti_spoofing=True,
+            detector_backend='opencv'
+        )
+        
+        # Clean up temp file
+        os.unlink(tmp_path)
+        
+        if len(result) == 0:
+            return {
+                'success': False,
+                'is_real': False,
+                'confidence': 0.0,
+                'error': 'No face detected'
+            }
+        
+        face_result = result[0]
+        is_real = face_result.get('is_real', False)
+        antispoof_score = face_result.get('antispoof_score', 0.0)
+        
+        # Convert all values to Python native types
+        return {
+            'success': True,
+            'is_real': bool(is_real),  # Ensure it's Python bool
+            'confidence': float(antispoof_score),
+            'passed': bool(is_real and antispoof_score >= 0.5)  # Ensure it's Python bool
+        }
+    
+    except Exception as e:
+        print(f"Error in liveness detection: {e}")
+        return {
+            'success': False,
+            'is_real': False,
+            'confidence': 0.0,
+            'error': str(e)
+        }
+
+
+
+def download_image_from_supabase(url: str) -> Optional[bytes]:
+    """
+    Download image from Supabase storage URL
+    
+    Args:
+        url: Public URL of image in Supabase storage
+    
+    Returns:
+        Image as bytes or None
+    """
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.content
+        return None
+    except Exception as e:
+        print(f"Error downloading image: {e}")
+        return None
+
+
+# def check_liveness(image_bytes: bytes) -> dict:
+#     """
+#     Check if image is from a real person (liveness detection)
+    
+#     Args:
+#         image_bytes: Image as bytes
+    
+#     Returns:
+#         dict with liveness status
+#     """
+#     try:
+#         # Save to temp file for DeepFace
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+#             tmp.write(image_bytes)
+#             tmp_path = tmp.name
+        
+#         # Perform anti-spoofing analysis
+#         result = DeepFace.extract_faces(
+#             img_path=tmp_path,
+#             anti_spoofing=True,
+#             detector_backend='opencv'
+#         )
+        
+#         # Clean up temp file
+#         os.unlink(tmp_path)
+        
+#         if len(result) == 0:
+#             return {
+#                 'success': False,
+#                 'is_real': False,
+#                 'confidence': 0.0,
+#                 'error': 'No face detected'
+#             }
+        
+#         face_result = result[0]
+#         is_real = face_result.get('is_real', False)
+#         antispoof_score = face_result.get('antispoof_score', 0.0)
+        
+#         return {
+#             'success': True,
+#             'is_real': is_real,
+#             'confidence': float(antispoof_score),
+#             'passed': is_real and antispoof_score >= 0.5
+#         }
+    
+#     except Exception as e:
+#         print(f"Error in liveness detection: {e}")
+#         return {
+#             'success': False,
+#             'is_real': False,
+#             'confidence': 0.0,
+#             'error': str(e)
+#         }
+
+
+# ===== DATE HANDLING FUNCTIONS =====
+# (Keep all your existing date functions here)
+
+def normalize_date_string(date_str: str) -> str:
+    if not date_str:
+        return ""
+    date_str = ' '.join(date_str.split())
+    replacements = {
+        'st': '', 'nd': '', 'rd': '', 'th': '',
+        'of': '', 'the': '',
+        '/': '-', '.': '-',
+    }
+    for old, new in replacements.items():
+        date_str = date_str.replace(old, new)
+    return date_str.strip()
+
+
+def extract_date_of_birth(ocr_text: str) -> list:
+    dates_found = []
+    if not ocr_text:
+        return dates_found
+    ocr_text = normalize_date_string(ocr_text)
+    date_patterns = [
+        r'\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b',
+        r'\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b',
+        r'\b(\d{4})[/-](\d{1,2})[/-](\d{1,2})\b',
+    ]
+    for pattern in date_patterns:
+        matches = re.findall(pattern, ocr_text, re.IGNORECASE)
+        for match in matches:
+            try:
+                date_string = '-'.join(str(m) for m in match)
+                parsed_date = date_parser.parse(date_string, fuzzy=True)
+                if 1900 <= parsed_date.year <= datetime.now().year:
+                    dates_found.append(parsed_date)
+            except:
+                continue
+    return dates_found
+
+
+def parse_date_flexible(date_input: str) -> Optional[datetime]:
+    if not date_input:
+        return None
+    try:
+        date_input = normalize_date_string(str(date_input))
+        parsed_date = date_parser.parse(date_input, fuzzy=True, dayfirst=True)
+        return parsed_date
+    except:
+        return None
+
+
+def compare_dates_flexible(date1_str: str, date2_str: str) -> dict:
+    result = {
+        'match': False,
+        'similarity_score': 0.0,
+        'match_type': 'no_match'
+    }
+    date1 = parse_date_flexible(date1_str)
+    date2 = parse_date_flexible(date2_str)
+    if not date1 or not date2:
+        return result
+    if date1.date() == date2.date():
+        result['match'] = True
+        result['similarity_score'] = 1.0
+        result['match_type'] = 'exact'
+        return result
+    if date1.year == date2.year:
+        if date1.day == date2.month and date1.month == date2.day:
+            result['match'] = True
+            result['similarity_score'] = 0.95
+            result['match_type'] = 'day_month_swapped'
+    return result
+# ===== ADD THESE TWO NEW FUNCTIONS =====
+
+def improve_image_for_ocr(image: Image.Image) -> Image.Image:
+    """Preprocess image for better OCR results"""
+    img_array = np.array(image)
+    img = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    denoised = cv2.fastNlMeansDenoising(thresh, None, 10, 7, 21)
+    return Image.fromarray(denoised)
+
+
+def extract_text_with_multiple_methods(image: Image.Image) -> str:
+    """Try multiple OCR methods to extract text"""
+    texts = []
+    
+    # Method 1: Original
+    try:
+        texts.append(pytesseract.image_to_string(image))
+    except:
+        pass
+    
+    # Method 2: Preprocessed
+    try:
+        improved_img = improve_image_for_ocr(image)
+        texts.append(pytesseract.image_to_string(improved_img))
+    except:
+        pass
+    
+    # Method 3: Custom config
+    try:
+        custom_config = r'--oem 3 --psm 6'
+        texts.append(pytesseract.image_to_string(image, config=custom_config))
+    except:
+        pass
+    
+    return "\n".join(texts)
+
+
+def verify_dob_with_retry(user_dob: str, extracted_dates: list) -> dict:
+    if not extracted_dates or len(extracted_dates) == 0:
+        return {
+            'match': False,
+            'confidence': 0.0,
+            'suggestion': None,
+            'extracted_dob': None,
+            'message': 'No date of birth found in document'
+        }
+    best_match = None
+    best_score = 0.0
+    for extracted_date in extracted_dates:
+        comparison = compare_dates_flexible(user_dob, extracted_date.strftime('%Y-%m-%d'))
+        if comparison['similarity_score'] > best_score:
+            best_score = comparison['similarity_score']
+            best_match = comparison
+    if best_score >= 0.90:
+        return {
+            'match': True,
+            'confidence': best_score,
+            'extracted_dob': extracted_date.strftime('%Y-%m-%d'),
+            'message': 'Date of birth verified'
+        }
+    return {
+        'match': False,
+        'confidence': best_score,
+        'message': 'Date of birth does not match'
+    }
+
+
+def extract_document_number(ocr_text: str, doc_type: str) -> Optional[str]:
+    if not ocr_text:
+        return None
+    ocr_text = ocr_text.upper()
+    if doc_type == "aadhar":
+        match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', ocr_text)
+        return match.group(0).replace(" ", "") if match else None
+    elif doc_type == "pan":
+        match = re.search(r'\b[A-Z]{5}\d{4}[A-Z]\b', ocr_text)
+        return match.group(0) if match else None
+    return None
+
+
+def verify_document_number(entered_number: str, extracted_number: Optional[str]) -> bool:
+    if not extracted_number:
+        return False
+    entered_clean = entered_number.replace(" ", "").upper()
+    extracted_clean = extracted_number.replace(" ", "").upper()
+    return entered_clean == extracted_clean
+
+
+# ===== API ENDPOINTS =====
+
+# @app.get("/")
+# def read_root():
+#     return {"message": "F-AI AuthX API with Face Verification is running"}
+#removing this for ngrok
 
 @app.post("/api/users/create")
 async def create_user(
@@ -51,7 +1791,6 @@ async def create_user(
 ):
     """Create a new user and return user_id"""
     try:
-        # Insert user into database
         response = supabase.table("users").insert({
             "first_name": first_name,
             "last_name": last_name,
@@ -74,6 +1813,7 @@ async def create_user(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/api/documents/upload")
 async def upload_document(
     user_id: str = Form(...),
@@ -82,170 +1822,393 @@ async def upload_document(
     document_image: UploadFile = File(...),
     user_dob: str = Form(...)
 ):
-    """Upload document image, perform OCR, and verify"""
+    """Upload document, perform OCR, extract face, and verify"""
     try:
         # Read image
         image_bytes = await document_image.read()
         image = Image.open(io.BytesIO(image_bytes))
         
         # Perform OCR
-        ocr_text = pytesseract.image_to_string(image)
-        
-        # Extract document number and DOB from OCR text
+        # ocr_text = pytesseract.image_to_string(image)
+        ocr_text =extract_text_with_multiple_methods(image)
+        # Extract document number
         extracted_doc_number = extract_document_number(ocr_text, document_type)
-        extracted_dob = extract_date_of_birth(ocr_text)
         
-        # Verify document number match
+        # Extract dates
+        extracted_dates = extract_date_of_birth(ocr_text)
+        
+        # Verify document number
         doc_number_match = verify_document_number(document_number, extracted_doc_number)
         
-        # Verify DOB match
-        dob_match = verify_dob(user_dob, extracted_dob)
+        # Verify DOB
+        dob_verification = verify_dob_with_retry(user_dob, extracted_dates)
         
-        # Upload image to Supabase Storage
-        file_name = f"{user_id}_{document_type}_{uuid.uuid4()}.jpg"
+        # NEW: Extract face from document
+        face_data = extract_face_from_image(image_bytes)
+        face_detected = face_data is not None
+        
+        # Upload to Supabase Storage with folder structure: user_id/document_type_uuid.jpg
+        file_path = f"{user_id}/{document_type}_{uuid.uuid4()}.jpg"
+        
         supabase.storage.from_("document-images").upload(
-            file_name,
+            file_path,
             image_bytes,
             {"content-type": "image/jpeg"}
         )
         
-        # Get public URL
-        document_url = supabase.storage.from_("document-images").get_public_url(file_name)
+        document_url = supabase.storage.from_("document-images").get_public_url(file_path)
         
-        # Save document info to database
+        # Save document info
         supabase.table("documents").insert({
             "user_id": user_id,
             "document_type": document_type,
             "document_number": document_number,
             "extracted_document_number": extracted_doc_number,
-            "extracted_date_of_birth": extracted_dob,
+            "extracted_date_of_birth": dob_verification.get('extracted_dob'),
             "document_image_url": document_url
         }).execute()
         
-        # Update verification status
-        supabase.table("verifications").update({
+        # Update verification with face embedding
+        update_data = {
             "document_number_match": doc_number_match,
-            "dob_match": dob_match,
-            "age_verified": dob_match,
-            "document_originality_verified": True,  # Can add more sophisticated checks
+            "dob_match": dob_verification['match'],
+            "age_verified": dob_verification['match'],
+            "document_originality_verified": True,
+            "document_face_detected": face_detected,
             "ocr_data": {
                 "raw_text": ocr_text,
                 "extracted_doc_number": extracted_doc_number,
-                "extracted_dob": extracted_dob
+                "extracted_dates": [d.strftime('%Y-%m-%d') for d in extracted_dates] if extracted_dates else [],
+                "dob_verification": dob_verification
             }
-        }).eq("user_id", user_id).execute()
+        }
+        
+        # Store face embedding if detected
+        if face_detected:
+            update_data["document_face_embedding"] = face_data['embedding']
+            update_data["document_face_confidence"] = face_data['confidence']
+        
+        supabase.table("verifications").update(update_data).eq("user_id", user_id).execute()
         
         return {
             "success": True,
             "document_url": document_url,
-            "ocr_text": ocr_text,
-            "extracted_doc_number": extracted_doc_number,
-            "extracted_dob": extracted_dob,
             "doc_number_match": doc_number_match,
-            "dob_match": dob_match
+            "dob_match": dob_verification['match'],
+            "dob_verification": dob_verification,
+            "face_detected": face_detected,
+            "face_confidence": face_data['confidence'] if face_detected else 0.0,
+            "requires_correction": not dob_verification['match']
         }
     
     except Exception as e:
+        print(f"Error in upload_document: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/images/upload-selfie")
 async def upload_selfie(
     user_id: str = Form(...),
     selfie_image: UploadFile = File(...)
 ):
-    """Upload selfie image"""
+    """Upload selfie and extract face embedding"""
     try:
         image_bytes = await selfie_image.read()
         
-        # Upload to Supabase Storage
-        file_name = f"{user_id}_selfie_{uuid.uuid4()}.jpg"
+        # Extract face from selfie
+        face_data = extract_face_from_image(image_bytes)
+        
+        if not face_data:
+            raise HTTPException(
+                status_code=400,
+                detail="No face detected in selfie. Please upload a clear photo."
+            )
+        
+        # Upload to Supabase Storage: user_id/selfie_uuid.jpg
+        file_path = f"{user_id}/selfie_{uuid.uuid4()}.jpg"
+        
         supabase.storage.from_("selfie-images").upload(
-            file_name,
+            file_path,
             image_bytes,
             {"content-type": "image/jpeg"}
         )
         
-        selfie_url = supabase.storage.from_("selfie-images").get_public_url(file_name)
+        selfie_url = supabase.storage.from_("selfie-images").get_public_url(file_path)
         
-        # Update verification record
+        # Update verification with selfie embedding
         supabase.table("verifications").update({
-            "selfie_image_url": selfie_url
+            "selfie_image_url": selfie_url,
+            "selfie_face_embedding": face_data['embedding'],
+            "selfie_face_confidence": face_data['confidence']
         }).eq("user_id", user_id).execute()
         
-        return {"success": True, "selfie_url": selfie_url}
+        return {
+            "success": True,
+            "selfie_url": selfie_url,
+            "face_confidence": face_data['confidence']
+        }
     
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+# @app.post("/api/images/upload-live-preview")
+# async def upload_live_preview(
+#     user_id: str = Form(...),
+#     live_image: UploadFile = File(...)
+# ):
+#     """Upload live preview and verify against document and selfie"""
+#     try:
+#         image_bytes = await live_image.read()
+        
+#         # Step 1: Check liveness
+#         liveness_result = check_liveness(image_bytes)
+        
+#         if not liveness_result.get('passed', False):
+#             return {
+#                 "success": False,
+#                 "error": "Liveness check failed - possible spoofing detected",
+#                 "liveness": liveness_result
+#             }
+        
+#         # Step 2: Extract face from live capture
+#         live_face_data = extract_face_from_image(image_bytes)
+        
+#         if not live_face_data:
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail="No face detected in live capture"
+#             )
+        
+#         # Step 3: Get stored embeddings from database
+#         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        
+#         if not verification.data:
+#             raise HTTPException(status_code=404, detail="Verification record not found")
+        
+#         ver_data = verification.data[0]
+#         document_embedding = ver_data.get('document_face_embedding')
+#         selfie_embedding = ver_data.get('selfie_face_embedding')
+        
+#         if not document_embedding or not selfie_embedding:
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail="Document or selfie face not found. Please upload both first."
+#             )
+        
+#         # Step 4: Compare live capture with document
+#         doc_comparison = compare_face_embeddings(
+#             document_embedding,
+#             live_face_data['embedding']
+#         )
+        
+#         # Step 5: Compare live capture with selfie
+#         selfie_comparison = compare_face_embeddings(
+#             selfie_embedding,
+#             live_face_data['embedding']
+#         )
+        
+#         # Step 6: Determine overall verification
+#         verification_passed = all([
+#             liveness_result.get('passed', False),
+#             doc_comparison['match'],
+#             selfie_comparison['match']
+#         ])
+        
+#         avg_similarity = (doc_comparison['similarity_percentage'] + selfie_comparison['similarity_percentage']) / 2
+        
+#         # Upload live image
+#         file_path = f"{user_id}/live_{uuid.uuid4()}.jpg"
+        
+#         supabase.storage.from_("live-preview-images").upload(
+#             file_path,
+#             image_bytes,
+#             {"content-type": "image/jpeg"}
+#         )
+        
+#         live_url = supabase.storage.from_("live-preview-images").get_public_url(file_path)
+        
+#         # Update verification record
+#         supabase.table("verifications").update({
+#             "live_preview_image_url": live_url,
+#             "face_similarity_verified": verification_passed,
+#             "face_similarity_percentage": avg_similarity,
+#             "liveness_passed": liveness_result.get('passed', False),
+#             "liveness_confidence": liveness_result.get('confidence', 0.0),
+#             "verification_data": {
+#                 "liveness": liveness_result,
+#                 "document_comparison": doc_comparison,
+#                 "selfie_comparison": selfie_comparison
+#             }
+#         }).eq("user_id", user_id).execute()
+        
+#         return {
+#             "success": True,
+#             "verification_passed": verification_passed,
+#             "live_url": live_url,
+#             "liveness": liveness_result,
+#             "document_comparison": doc_comparison,
+#             "selfie_comparison": selfie_comparison,
+#             "overall_similarity": avg_similarity
+#         }
+    
+#     except Exception as e:
+#         print(f"Error in live preview: {e}")
+#         raise HTTPException(status_code=400, detail=str(e))
 @app.post("/api/images/upload-live-preview")
 async def upload_live_preview(
     user_id: str = Form(...),
     live_image: UploadFile = File(...)
 ):
-    """Upload live camera snapshot"""
+    """Upload live preview and verify against document and selfie"""
     try:
         image_bytes = await live_image.read()
         
-        # Upload to Supabase Storage
-        file_name = f"{user_id}_live_{uuid.uuid4()}.jpg"
-        supabase.storage.from_("live-preview-images").upload(
-            file_name,
-            image_bytes,
-            {"content-type": "image/jpeg"}
-        )
+        # Step 1: Check liveness
+        print(f"Checking liveness for user: {user_id}")
+        liveness_result = check_liveness(image_bytes)
+        print(f"Liveness result: {liveness_result}")
         
-        live_url = supabase.storage.from_("live-preview-images").get_public_url(file_name)
+        if not liveness_result.get('passed', False):
+            return {
+                "success": False,
+                "error": "Liveness check failed - possible spoofing detected",
+                "liveness": liveness_result,
+                "verification_passed": False
+            }
         
-        # Update verification record
-        supabase.table("verifications").update({
-            "live_preview_image_url": live_url
-        }).eq("user_id", user_id).execute()
+        # Step 2: Extract face from live capture
+        print("Extracting face from live capture...")
+        live_face_data = extract_face_from_image(image_bytes)
         
-        return {"success": True, "live_url": live_url}
-    
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/api/verify/face-similarity")
-async def verify_face_similarity(
-    user_id: str = Form(...)
-):
-    """
-    Verify face similarity using Buffalo model
-    NOTE: This is a placeholder. You'll integrate the trained Buffalo model here.
-    """
-    try:
-        # TODO: Implement Buffalo face recognition model here
-        # For now, return a mock similarity score
+        if not live_face_data:
+            raise HTTPException(
+                status_code=400,
+                detail="No face detected in live capture"
+            )
         
-        # Get verification record
+        print(f"Face detected with confidence: {live_face_data['confidence']}")
+        
+        # Step 3: Get stored embeddings from database
+        print(f"Fetching verification data for user: {user_id}")
         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
         
         if not verification.data:
             raise HTTPException(status_code=404, detail="Verification record not found")
         
-        # Placeholder for Buffalo model integration
-        # similarity_score = buffalo_model.compare_faces(selfie_url, live_url)
+        ver_data = verification.data[0]
+        document_embedding = ver_data.get('document_face_embedding')
+        selfie_embedding = ver_data.get('selfie_face_embedding')
         
-        # Mock similarity score for demonstration
-        similarity_score = 85.5  # This will be replaced with actual Buffalo model output
+        if not document_embedding or not selfie_embedding:
+            raise HTTPException(
+                status_code=400,
+                detail="Document or selfie face not found. Please upload both first."
+            )
         
-        is_verified = similarity_score >= 75.0  # Threshold
+        print("Comparing faces...")
         
-        # Update verification status
-        supabase.table("verifications").update({
-            "face_similarity_percentage": similarity_score,
-            "face_similarity_verified": is_verified
-        }).eq("user_id", user_id).execute()
+        # Step 4: Compare live capture with document
+        doc_comparison = compare_face_embeddings(
+            document_embedding,
+            live_face_data['embedding']
+        )
+        print(f"Document comparison: {doc_comparison}")
         
+        # Step 5: Compare live capture with selfie
+        selfie_comparison = compare_face_embeddings(
+            selfie_embedding,
+            live_face_data['embedding']
+        )
+        print(f"Selfie comparison: {selfie_comparison}")
+        
+        # Step 6: Determine overall verification
+        verification_passed = bool(all([
+            liveness_result.get('passed', False),
+            doc_comparison.get('match', False),
+            selfie_comparison.get('match', False)
+        ]))
+        
+        avg_similarity = float((
+            doc_comparison.get('similarity_percentage', 0) + 
+            selfie_comparison.get('similarity_percentage', 0)
+        ) / 2)
+        
+        print(f"Verification passed: {verification_passed}, Avg similarity: {avg_similarity}")
+        
+        # Upload live image
+        file_path = f"{user_id}/live_{uuid.uuid4()}.jpg"
+        
+        supabase.storage.from_("live-preview-images").upload(
+            file_path,
+            image_bytes,
+            {"content-type": "image/jpeg"}
+        )
+        
+        live_url = supabase.storage.from_("live-preview-images").get_public_url(file_path)
+        
+        # Update verification record with proper type conversion
+        update_data = {
+            "live_preview_image_url": live_url,
+            "face_similarity_verified": verification_passed,
+            "face_similarity_percentage": avg_similarity,
+            "liveness_passed": bool(liveness_result.get('passed', False)),
+            "liveness_confidence": float(liveness_result.get('confidence', 0.0)),
+            "verification_data": {
+                "liveness": {
+                    "success": bool(liveness_result.get('success', False)),
+                    "is_real": bool(liveness_result.get('is_real', False)),
+                    "confidence": float(liveness_result.get('confidence', 0.0)),
+                    "passed": bool(liveness_result.get('passed', False))
+                },
+                "document_comparison": {
+                    "match": bool(doc_comparison.get('match', False)),
+                    "similarity": float(doc_comparison.get('similarity', 0.0)),
+                    "similarity_percentage": float(doc_comparison.get('similarity_percentage', 0.0)),
+                    "threshold": float(doc_comparison.get('threshold', 0.0))
+                },
+                "selfie_comparison": {
+                    "match": bool(selfie_comparison.get('match', False)),
+                    "similarity": float(selfie_comparison.get('similarity', 0.0)),
+                    "similarity_percentage": float(selfie_comparison.get('similarity_percentage', 0.0)),
+                    "threshold": float(selfie_comparison.get('threshold', 0.0))
+                }
+            }
+        }
+        
+        print("Updating database...")
+        supabase.table("verifications").update(update_data).eq("user_id", user_id).execute()
+        
+        # Return response with proper type conversion
         return {
             "success": True,
-            "similarity_score": similarity_score,
-            "is_verified": is_verified
+            "verification_passed": bool(verification_passed),
+            "live_url": live_url,
+            "liveness": {
+                "success": bool(liveness_result.get('success', False)),
+                "is_real": bool(liveness_result.get('is_real', False)),
+                "confidence": float(liveness_result.get('confidence', 0.0)),
+                "passed": bool(liveness_result.get('passed', False))
+            },
+            "document_comparison": {
+                "match": bool(doc_comparison.get('match', False)),
+                "similarity_percentage": float(doc_comparison.get('similarity_percentage', 0.0))
+            },
+            "selfie_comparison": {
+                "match": bool(selfie_comparison.get('match', False)),
+                "similarity_percentage": float(selfie_comparison.get('similarity_percentage', 0.0))
+            },
+            "overall_similarity": float(avg_similarity)
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Error in live preview: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/biometric/upload")
 async def upload_biometric(
@@ -256,20 +2219,20 @@ async def upload_biometric(
     try:
         image_bytes = await biometric_image.read()
         
-        # Upload to Supabase Storage
-        file_name = f"{user_id}_biometric_{uuid.uuid4()}.jpg"
+        # Upload to Supabase: user_id/biometric_uuid.jpg
+        file_path = f"{user_id}/biometric_{uuid.uuid4()}.jpg"
+        
         supabase.storage.from_("biometric-images").upload(
-            file_name,
+            file_path,
             image_bytes,
             {"content-type": "image/jpeg"}
         )
         
-        biometric_url = supabase.storage.from_("biometric-images").get_public_url(file_name)
+        biometric_url = supabase.storage.from_("biometric-images").get_public_url(file_path)
         
-        # Update verification record
         supabase.table("verifications").update({
             "biometric_image_url": biometric_url,
-            "biometric_verified": True  # Add actual biometric verification logic
+            "biometric_verified": True
         }).eq("user_id", user_id).execute()
         
         return {"success": True, "biometric_url": biometric_url}
@@ -277,11 +2240,11 @@ async def upload_biometric(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.get("/api/verification/status/{user_id}")
 async def get_verification_status(user_id: str):
-    """Get verification status for a user"""
+    """Get complete verification status"""
     try:
-        # Get verification data
         verification = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
         
         if not verification.data:
@@ -292,72 +2255,73 @@ async def get_verification_status(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# Helper functions for OCR processing
 
-def extract_document_number(ocr_text: str, doc_type: str) -> Optional[str]:
-    """Extract document number based on document type"""
-    ocr_text = ocr_text.upper()
+@app.post("/api/users/lookup-by-email")
+async def lookup_user_by_email(email: str = Form(...)):
+    """Look up user by email"""
+    try:
+        user_response = supabase.table("users").select("*").eq("email", email).execute()
+        
+        if not user_response.data or len(user_response.data) == 0:
+            raise HTTPException(status_code=404, detail="No user found with this email address")
+        
+        user = user_response.data[0]
+        user_id = user['id']
+        
+        verification_response = supabase.table("verifications").select("*").eq("user_id", user_id).execute()
+        verification = verification_response.data[0] if verification_response.data else None
+        
+        steps_completed = {
+            "personal_info": True,
+            "document_uploaded": verification and verification.get('document_number_match') is not None,
+            "selfie_uploaded": verification and verification.get('selfie_image_url') is not None,
+            "biometric_uploaded": verification and verification.get('biometric_image_url') is not None,
+            "face_verified": verification and verification.get('face_similarity_verified') is not None
+        }
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "user_data": {
+                "first_name": user['first_name'],
+                "last_name": user['last_name'],
+                "email": user['email'],
+                "date_of_birth": user['date_of_birth']
+            },
+            "verification_status": verification,
+            "steps_completed": steps_completed,
+            "is_fully_verified": all(steps_completed.values())
+        }
     
-    # Aadhar: 12 digit number
-    if doc_type == "aadhar":
-        match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', ocr_text)
-        return match.group(0).replace(" ", "") if match else None
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+import tempfile
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+build_path = r"C:\Users\sayan\OneDrive\Desktop\fai authx\frontend\build"
+if os.path.exists(build_path):
+    print(f"✅ Serving React frontend from: {build_path}")
     
-    # PAN: 10 character alphanumeric
-    elif doc_type == "pan":
-        match = re.search(r'\b[A-Z]{5}\d{4}[A-Z]\b', ocr_text)
-        return match.group(0) if match else None
+    # Mount static files (CSS, JS, images)
+    app.mount("/static", StaticFiles(directory=f"{build_path}/static"), name="static")
     
-    # Driving License: varies by state
-    elif doc_type == "driving_license":
-        match = re.search(r'\b[A-Z]{2}\d{2}\s?\d{11}\b', ocr_text)
-        return match.group(0) if match else None
+    # Serve React app for all non-API routes
+    @app.get("/", include_in_schema=False)
+    async def serve_home():
+        return FileResponse(f"{build_path}/index.html")
     
-    # Passport: 8 characters
-    elif doc_type == "passport":
-        match = re.search(r'\b[A-Z]\d{7}\b', ocr_text)
-        return match.group(0) if match else None
+    @app.get("/about", include_in_schema=False)
+    async def serve_about():
+        return FileResponse(f"{build_path}/index.html")
     
-    # Voter ID
-    elif doc_type == "voter_id":
-        match = re.search(r'\b[A-Z]{3}\d{7}\b', ocr_text)
-        return match.group(0) if match else None
-    
-    return None
-
-def extract_date_of_birth(ocr_text: str) -> Optional[str]:
-    """Extract date of birth from OCR text"""
-    # Common date patterns: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
-    date_patterns = [
-        r'\b(\d{2})[/-](\d{2})[/-](\d{4})\b',
-        r'\b(\d{2})\.(\d{2})\.(\d{4})\b',
-    ]
-    
-    for pattern in date_patterns:
-        match = re.search(pattern, ocr_text)
-        if match:
-            day, month, year = match.groups()
-            return f"{year}-{month}-{day}"  # Return in ISO format
-    
-    return None
-
-def verify_document_number(entered_number: str, extracted_number: Optional[str]) -> bool:
-    """Verify if document numbers match"""
-    if not extracted_number:
-        return False
-    
-    # Remove spaces and compare
-    entered_clean = entered_number.replace(" ", "").upper()
-    extracted_clean = extracted_number.replace(" ", "").upper()
-    
-    return entered_clean == extracted_clean
-
-def verify_dob(entered_dob: str, extracted_dob: Optional[str]) -> bool:
-    """Verify if dates of birth match"""
-    if not extracted_dob:
-        return False
-    
-    return entered_dob == extracted_dob
+    @app.get("/verification-status", include_in_schema=False)
+    async def serve_status():
+        return FileResponse(f"{build_path}/index.html")
+else:
+    print(f"⚠️  Frontend build not found at: {build_path}")
+    print("   Run: cd frontend && npm run build")
 
 if __name__ == "__main__":
     import uvicorn
