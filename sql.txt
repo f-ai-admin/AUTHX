@@ -69,10 +69,10 @@ create index IF not exists idx_verifications_user_id on public.verifications usi
 create index IF not exists idx_verified_users on public.verifications using btree (is_fully_verified, expiry_date) TABLESPACE pg_default
 where
   (is_fully_verified = true);
-Then create 4 buckets for storing:
-1. Documents
-2. Photo of the candidate
-3. Biometric or signature
-4. Live preview capture
-
+# Then create 4 buckets for storing:
+# 1. Documents
+# 2. Photo of the candidate
+# 3. Biometric or signature
+# 4. Live preview capture
+# The files  stored in the buckets are done based on the uniques ID created for the users, folders formed with those unique ID's and the files are stored in them
 create index IF not exists idx_users_email on public.users using btree (email) TABLESPACE pg_default;
